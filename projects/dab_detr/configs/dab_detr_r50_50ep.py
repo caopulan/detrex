@@ -5,6 +5,7 @@ dataloader = get_config("common/data/coco_detr.py").dataloader
 optimizer = get_config("common/optim.py").AdamW
 lr_multiplier = get_config("common/coco_schedule.py").lr_multiplier_50ep
 train = get_config("common/train.py").train
+wandb = get_config("common/wandb.py").wandb
 
 # initialize checkpoint to be loaded
 train.init_checkpoint = "detectron2://ImageNetPretrained/torchvision/R-50.pkl"
