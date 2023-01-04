@@ -185,7 +185,7 @@ def do_train(args, cfg):
     )
 
     writers = default_writers(cfg.train.output_dir, cfg.train.max_iter)
-    if cfg.wandb.enabled:
+    if cfg.wandb.enabled and comm.is_main_process():
         writers.append(WandBWriter(cfg))
 
     trainer.register_hooks(
