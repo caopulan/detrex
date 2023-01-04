@@ -9,10 +9,10 @@ wandb = get_config("common/wandb.py").wandb
 
 # initialize checkpoint to be loaded
 train.init_checkpoint = "detectron2://ImageNetPretrained/torchvision/R-50.pkl"
-train.output_dir = "./output/dab_detr_r50_50ep"
+train.output_dir = "./output/dab_detr_r50_12ep"
 
 # max training iterations
-train.max_iter = 375000
+train.max_iter = 90000
 
 # run evaluation every 5000 iters
 train.eval_period = 5000
