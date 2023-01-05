@@ -23,3 +23,5 @@ from .dist import (
     get_world_size,
     get_rank,
 )
+
+from .wandb_writer import WandBWriter
