@@ -327,6 +327,7 @@ class ConditionalCrossAttention(nn.Module):
         self.key_pos_proj = nn.Linear(embed_dim, embed_dim)
         self.value_proj = nn.Linear(embed_dim, embed_dim)
         self.out_proj = nn.Linear(embed_dim, embed_dim)
+        self.out_pos_proj = nn.Linear(embed_dim, embed_dim)
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj_drop = nn.Dropout(proj_drop)
         self.num_heads = num_heads
@@ -470,7 +471,9 @@ class ConditionalCrossAttention(nn.Module):
         out_pos = (v_pos.transpose(-1, -2) @ attn[..., None])[..., 0]
         out_pos = out_pos.transpose(1, 2).reshape(B, N, C)
         out = (attn @ v).transpose(1, 2).reshape(B, N, C)
-        out = self.out_proj(out_pos + out)
+        out = self.out_proj(out)
+        out_pos = self.out_pos_proj(out_pos)
+        out = out + out_pos
 
         if not self.batch_first:
             out = out.transpose(0, 1)
