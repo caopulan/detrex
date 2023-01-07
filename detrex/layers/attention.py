@@ -409,11 +409,14 @@ class ConditionalCrossAttention(nn.Module):
         # content projection
         query_content = self.query_content_proj(query)
         key_content = self.key_content_proj(key)
-        value = self.value_proj(value)
 
         # shape info
         N, B, C = query_content.shape
         HW, _, _ = key_content.shape
+
+        # add position information to value
+        v_pos = query_sine_embed.view(-1, B, C)[:, None] - key_pos[None]
+        value = self.value_proj(value)
 
         # position projection
         key_pos = self.key_pos_proj(key_pos)
@@ -459,9 +462,15 @@ class ConditionalCrossAttention(nn.Module):
 
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
-
+        # v_pos     N, HW, num_head, B, C -> B num_head N HW C
+        # attention B, num_head, N, HW, 1
+        v_pos = v_pos.reshape(N, HW, B, self.num_heads, C // self.num_heads).permute(
+            2, 3, 0, 1, 4
+        )# (B, num_heads, HW, head_dim)
+        out_pos = (v_pos.transpose(-1, -2) @ attn[..., None])[..., 0]
+        out_pos = out_pos.transpose(1, 2).reshape(B, N, C)
         out = (attn @ v).transpose(1, 2).reshape(B, N, C)
-        out = self.out_proj(out)
+        out = self.out_proj(out_pos + out)
 
         if not self.batch_first:
             out = out.transpose(0, 1)
