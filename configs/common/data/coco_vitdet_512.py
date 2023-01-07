@@ -14,7 +14,7 @@ from detrex.data import DetrDatasetMapper
 
 dataloader = OmegaConf.create()
 
-image_size = 1024
+image_size = 512
 dataloader.train = L(build_detection_train_loader)(
     dataset=L(get_detection_dataset_dicts)(names="coco_2017_train"),
     mapper=L(DetrDatasetMapper)(
