@@ -325,9 +325,9 @@ class ConditionalCrossAttention(nn.Module):
         self.query_pos_sine_proj = nn.Linear(embed_dim, embed_dim)
         self.key_content_proj = nn.Linear(embed_dim, embed_dim)
         self.key_pos_proj = nn.Linear(embed_dim, embed_dim)
+        self.value_pos_proj = nn.Linear(embed_dim, embed_dim)
         self.value_proj = nn.Linear(embed_dim, embed_dim)
         self.out_proj = nn.Linear(embed_dim, embed_dim)
-        self.out_pos_proj = nn.Linear(embed_dim, embed_dim)
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj_drop = nn.Dropout(proj_drop)
         self.num_heads = num_heads
@@ -342,7 +342,6 @@ class ConditionalCrossAttention(nn.Module):
         query_pos=None,
         key_pos=None,
         query_sine_embed=None,
-        query_sine_embed_origin=None,
         is_first_layer=False,
         attn_mask=None,
         key_padding_mask=None,
@@ -416,12 +415,9 @@ class ConditionalCrossAttention(nn.Module):
         N, B, C = query_content.shape
         HW, _, _ = key_content.shape
 
-        # add position information to value
-        v_pos = query_sine_embed_origin.view(-1, B, C)[:, None] - key_pos[None]
-        value = self.value_proj(value)
-
         # position projection
         key_pos = self.key_pos_proj(key_pos)
+        value_pos = self.value_pos_proj(key_pos)
         if is_first_layer:
             query_pos = self.query_pos_proj(query_pos)
             q = query_content + query_pos
@@ -429,7 +425,7 @@ class ConditionalCrossAttention(nn.Module):
         else:
             q = query_content
             k = key_content
-        v = value
+        v = value + value_pos
 
         # preprocess
         q = q.view(N, B, self.num_heads, C // self.num_heads)
@@ -464,17 +460,9 @@ class ConditionalCrossAttention(nn.Module):
 
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
-        # v_pos     N, HW, num_head, B, C -> B num_head N HW C
-        # attention B, num_head, N, HW, 1
-        v_pos = v_pos.reshape(N, HW, B, self.num_heads, C // self.num_heads).permute(
-            2, 3, 0, 1, 4
-        )# (B, num_heads, HW, head_dim)
-        out_pos = (v_pos.transpose(-1, -2) @ attn[..., None])[..., 0]
-        out_pos = out_pos.transpose(1, 2).reshape(B, N, C)
+
         out = (attn @ v).transpose(1, 2).reshape(B, N, C)
         out = self.out_proj(out)
-        out_pos = self.out_pos_proj(out_pos)
-        out = out + out_pos
 
         if not self.batch_first:
             out = out.transpose(0, 1)
