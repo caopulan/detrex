@@ -185,7 +185,7 @@ class DNDetrTransformerDecoder(TransformerLayerSequence):
         for idx, layer in enumerate(self.layers):
             obj_center = reference_points[..., : self.embed_dim]
             query_sine_embed = get_sine_pos_embed(obj_center)
-            query_sine_embed_origin = query_sine_embed.clone()
+            query_sine_embed_origin = get_sine_pos_embed(obj_center[..., :2])
             query_pos = self.ref_point_head(query_sine_embed)
 
             # do not apply transform in position in the first decoder layer
