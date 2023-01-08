@@ -342,6 +342,7 @@ class ConditionalCrossAttention(nn.Module):
         query_pos=None,
         key_pos=None,
         query_sine_embed=None,
+        query_sine_embed_origin=None,
         is_first_layer=False,
         attn_mask=None,
         key_padding_mask=None,
@@ -416,7 +417,7 @@ class ConditionalCrossAttention(nn.Module):
         HW, _, _ = key_content.shape
 
         # add position information to value
-        v_pos = query_sine_embed.view(-1, B, C)[:, None] - key_pos[None]
+        v_pos = query_sine_embed_origin.view(-1, B, C)[:, None] - key_pos[None]
         value = self.value_proj(value)
 
         # position projection
