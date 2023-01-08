@@ -410,6 +410,7 @@ class ConditionalCrossAttention(nn.Module):
         # content projection
         query_content = self.query_content_proj(query)
         key_content = self.key_content_proj(key)
+        value = self.value_proj(value)
 
         # shape info
         N, B, C = query_content.shape
