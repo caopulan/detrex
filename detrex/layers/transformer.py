@@ -136,6 +136,7 @@ class BaseTransformerLayer(nn.Module):
         attn_index = 0
         ffn_index = 0
         identity = query
+        aux_return = None
         if attn_masks is None:
             attn_masks = [None for _ in range(self.num_attn)]
         elif isinstance(attn_masks, torch.Tensor):
@@ -189,7 +190,13 @@ class BaseTransformerLayer(nn.Module):
                 query = self.ffns[ffn_index](query, identity if self.pre_norm else None)
                 ffn_index += 1
 
-        return query
+            if not isinstance(query, torch.Tensor):
+                query, aux_return = query
+
+        if aux_return is not None:
+            return query, aux_return
+        else:
+            return query
 
 
 class TransformerLayerSequence(nn.Module):

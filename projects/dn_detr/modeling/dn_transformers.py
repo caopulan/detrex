@@ -206,7 +206,7 @@ class DNDetrTransformerDecoder(TransformerLayerSequence):
                     ref_hw_cond[..., 1] / obj_center[..., 3]
                 ).unsqueeze(-1)
 
-            query = layer(
+            query, value_pos = layer(
                 query,
                 key,
                 value,
@@ -223,7 +223,7 @@ class DNDetrTransformerDecoder(TransformerLayerSequence):
 
             # iter update
             if self.bbox_embed is not None:
-                temp = self.bbox_embed(query)
+                temp = self.bbox_embed(torch.cat([query, value_pos], dim=-1))
                 temp[..., : self.embed_dim] += inverse_sigmoid(reference_points)
                 new_reference_points = temp[..., : self.embed_dim].sigmoid()
 

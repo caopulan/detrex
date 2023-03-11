@@ -475,9 +475,9 @@ class ConditionalCrossAttention(nn.Module):
         out = (attn @ v).transpose(1, 2).reshape(B, N, C)
         out = self.out_proj(out)
         out_pos = self.out_pos_proj(out_pos)
-        out = out + out_pos
+        # out = out + out_pos
 
         if not self.batch_first:
             out = out.transpose(0, 1)
 
-        return identity + self.proj_drop(out)
+        return identity + self.proj_drop(out), out_pos
